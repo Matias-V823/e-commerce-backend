@@ -5,15 +5,15 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 export class Product {
     @PrimaryGeneratedColumn()
     id: number
-    @Column({type: 'varchar', length:80})
+    @Column({ type: 'varchar', length: 80 })
     name: string
-    @Column({type:'varchar', length:200})
+    @Column({ type: 'varchar', length: 200 })
     description: string
-    @Column({type:'varchar', nullable:true, default:'default.svg'})
+    @Column({ type: 'varchar', nullable: true, default: 'default.svg' })
     image: string
-    @Column({type:'decimal'})
+    @Column({ type: 'decimal' })
     price: number
-    @Column({type: 'int'})
+    @Column({ type: 'int' })
     inventory: number
     @ManyToOne(() => Category)
     category: Category

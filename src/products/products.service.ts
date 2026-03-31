@@ -12,12 +12,12 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product) private readonly productRepository: Repository<Product>,
     @InjectRepository(Category) private readonly categoryRepository: Repository<Category>
-  ) {}
+  ) { }
 
 
   async create(createProductDto: CreateProductDto) {
-    const category = await this.categoryRepository.findOneBy({id: createProductDto.categoryId})
-    if(!category){
+    const category = await this.categoryRepository.findOneBy({ id: createProductDto.categoryId })
+    if (!category) {
       throw new NotFoundException('La categoría no existe')
     }
 
@@ -27,8 +27,45 @@ export class ProductsService {
     })
   }
 
-  findAll() {
-    return `This action returns all products`;
+  async findAll(categoryId : number, take: number, skip: number) {
+    if(categoryId){
+      const [data, total] = await this.productRepository.findAndCount(
+        {
+          where:{
+            category: {
+              id: categoryId
+            }
+          },
+          relations: {
+            category: true
+          },
+          order: {
+            id: 'ASC'
+          },
+          take,
+          skip
+        });
+      return {
+        data,
+        total
+      }
+
+    }
+    const [ data, total ] = await this.productRepository.findAndCount(
+      {
+        relations: {
+          category: true
+        },
+        order:{
+          id:'ASC'
+        },
+        take,
+        skip
+      });
+    return {
+      data,
+      total
+    }
   }
 
   findOne(id: number) {
