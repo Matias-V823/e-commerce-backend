@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, HttpCode, Injectable } from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,32 +16,46 @@ export class TransactionsService {
 
 
   async create(createTransactionDto: CreateTransactionDto) {
-    const transaction = this.transactionRepository.create({
-      total: createTransactionDto.total
-    })
+    await this.productRepository.manager.transaction(async (transactionEntityManager) => {
+      const transactionRepository = transactionEntityManager.getRepository(Transaction);
+      const transactionContentsRepository = transactionEntityManager.getRepository(TransactionContents);
+      const productRepository = transactionEntityManager.getRepository(Product);
 
-    await this.transactionRepository.save(transaction)
+      const transaction = transactionRepository.create({
+        total: createTransactionDto.total
+      })
+      await transactionRepository.save(transaction)
 
-    for (const item of createTransactionDto.contents) {
-      const product = await this.productRepository.findOneBy({ id: item.productId });
-      
+      for (const item of createTransactionDto.contents) {
+        const product = await productRepository.findOneBy({ id: item.productId });
 
-      if (!product) {
-        throw new Error(`Producto con ID ${item.productId} no encontrado`);
+        if (!product) {
+          throw new Error(`Producto con ID ${item.productId} no encontrado`);
+        }
+
+        const content = transactionContentsRepository.create({
+          ...item,
+          transaction: transaction,
+          product: product
+        });
+
+        if (content.quantity > product.inventory) {
+          throw new BadRequestException(`El articulo ${product.name} excede la cantidad disponible`)
+        }
+        product.inventory -= content.quantity
+
+        // Create transactionContents intance
+        const transactionContent = new TransactionContents()
+        transactionContent.price = content.price
+        transactionContent.product = product
+        transactionContent.quantity = content.quantity
+        transactionContent.transaction = transaction
+
+        await transactionContentsRepository.save(content);
+        await productRepository.save(product);
       }
-
-      const content = this.transactionContentsRepository.create({
-        ...item,
-        transaction: transaction, 
-        product: product
-      });
-
-      product.inventory -= content.quantity
-
-      await this.transactionContentsRepository.save(content);
-      await this.productRepository.save(product);
-    }
-    return transaction
+    })
+    return "Venta almacenada correctamente "
   }
 
   findAll() {
