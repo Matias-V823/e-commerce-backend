@@ -39,6 +39,7 @@ export class TransactionsService {
       product.inventory -= content.quantity
 
       await this.transactionContentsRepository.save(content);
+      await this.productRepository.save(product);
     }
     return transaction
   }
