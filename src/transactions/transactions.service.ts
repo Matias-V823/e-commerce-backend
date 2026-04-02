@@ -17,13 +17,18 @@ export class TransactionsService {
 
   async create(createTransactionDto: CreateTransactionDto) {
     await this.productRepository.manager.transaction(async (transactionEntityManager) => {
+
       const transactionRepository = transactionEntityManager.getRepository(Transaction);
       const transactionContentsRepository = transactionEntityManager.getRepository(TransactionContents);
       const productRepository = transactionEntityManager.getRepository(Product);
 
+
       const transaction = transactionRepository.create({
         total: createTransactionDto.total
       })
+
+      transaction.total = createTransactionDto.contents.reduce((total, item) => total + (item.quantity * item.price), 0)
+
       await transactionRepository.save(transaction)
 
       for (const item of createTransactionDto.contents) {
@@ -55,7 +60,7 @@ export class TransactionsService {
         await productRepository.save(product);
       }
     })
-    return "Venta almacenada correctamente "
+    return "Venta almacenada correctamente"
   }
 
   findAll() {
