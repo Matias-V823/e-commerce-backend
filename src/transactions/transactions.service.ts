@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Transaction, TransactionContents } from './entities/transaction.entity';
 import { Repository } from 'typeorm';
 import { Product } from 'src/products/entities/product.entity';
+import { FindManyOptions } from 'typeorm/browser';
 
 @Injectable()
 export class TransactionsService {
@@ -64,7 +65,12 @@ export class TransactionsService {
   }
 
   findAll() {
-    return `This action returns all transactions`;
+    const options : FindManyOptions<Transaction>= {
+      relations:{
+        contents:true
+      }
+    }
+    return this.transactionRepository.find(options);
   }
 
   findOne(id: number) {
