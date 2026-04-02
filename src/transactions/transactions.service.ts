@@ -103,11 +103,29 @@ export class TransactionsService {
     return transaction;
   }
 
-  update(id: number, updateTransactionDto: UpdateTransactionDto) {
-    return `This action updates a #${id} transaction`;
-  }
+  async remove(id: number) {
 
-  remove(id: number) {
-    return `This action removes a #${id} transaction`;
+    const transaction = await this.findOne(id)
+
+    for(const contents of transaction.contents){
+      const product = await this.productRepository.findOneBy({id: contents.product.id})
+      const transactionContents = await this.transactionContentsRepository.findOneBy({id: contents.id})
+      
+      if (product) {
+        product.inventory += contents.quantity
+        await this.productRepository.save(product)
+      }
+
+      if (transactionContents) {
+        await this.transactionContentsRepository.remove(transactionContents)
+      }
+    }
+
+    if (!transaction) {
+      throw new NotFoundException('Transacción no encontrada')
+    }
+    await this.transactionRepository.remove(transaction)
+
+    return `La venta de #${id} fue eliminada correctamente`;
   }
 }
