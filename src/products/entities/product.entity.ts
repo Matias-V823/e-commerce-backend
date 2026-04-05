@@ -1,5 +1,5 @@
 import { Category } from "../../categories/entities/category.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Product {
@@ -15,6 +15,9 @@ export class Product {
     price: number
     @Column({ type: 'int' })
     inventory: number
+    @Column({ type: 'int' })
+    categoryId: number
     @ManyToOne(() => Category)
+    @JoinColumn({ name: 'categoryId' })
     category: Category
 }
