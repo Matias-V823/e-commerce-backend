@@ -34,10 +34,10 @@ export class TransactionsService {
 
       transaction.total = total
 
-      if(createTransactionDto.coupon){
+      if (createTransactionDto.coupon) {
         const { coupon } = await this.couponService.applyCoupon(createTransactionDto.coupon)
 
-        const discount = (coupon.percentage /100) * total
+        const discount = (coupon.percentage / 100) * total
         transaction.discount = discount
         transaction.coupon = coupon.name
 
@@ -75,25 +75,25 @@ export class TransactionsService {
         await productRepository.save(product);
       }
     })
-    return "Venta almacenada correctamente"
+    return { message: "Venta almacenada correctamente" }
   }
 
-  findAll(transactionDate? : string) {
-    const options : FindManyOptions<Transaction>= {
-      relations:{
-        contents:true
+  findAll(transactionDate?: string) {
+    const options: FindManyOptions<Transaction> = {
+      relations: {
+        contents: true
       }
     }
-    if(transactionDate){
+    if (transactionDate) {
       const date = parseISO(transactionDate)
-      if(!isValid(date)){
+      if (!isValid(date)) {
         throw new BadRequestException("Fecha no válida")
       }
       const start = startOfDay(date)
       const end = endOfDay(date)
-      
+
       options.where = {
-        transactionDate: Between(start,end)
+        transactionDate: Between(start, end)
       }
 
     }
@@ -106,11 +106,11 @@ export class TransactionsService {
       where: {
         id
       },
-      relations:{
+      relations: {
         contents: true
       }
     })
-    if(!transaction){
+    if (!transaction) {
       throw new NotFoundException('Transacción no encontrada')
     }
     return transaction;
@@ -120,10 +120,10 @@ export class TransactionsService {
 
     const transaction = await this.findOne(id)
 
-    for(const contents of transaction.contents){
-      const product = await this.productRepository.findOneBy({id: contents.product.id})
-      const transactionContents = await this.transactionContentsRepository.findOneBy({id: contents.id})
-      
+    for (const contents of transaction.contents) {
+      const product = await this.productRepository.findOneBy({ id: contents.product.id })
+      const transactionContents = await this.transactionContentsRepository.findOneBy({ id: contents.id })
+
       if (product) {
         product.inventory += contents.quantity
         await this.productRepository.save(product)
